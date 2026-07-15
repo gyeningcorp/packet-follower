@@ -22,11 +22,82 @@ export const mockTraceResult = {
   protocol: 'TCP',
   dstPort: 443,
   hops: [
-    { nodeId: 'pc-01',     action: 'ORIGIN',  detail: 'SRC 10.0.0.10:54321 → 10.0.4.10:443',  latencyMs: 0   },
-    { nodeId: 'sw-access', action: 'FORWARD', detail: 'Out Gi0/1 → VLAN10, MAC learned',        latencyMs: 1   },
-    { nodeId: 'sw-dist',   action: 'FORWARD', detail: 'Out Te0/1 → routed uplink, L3 handoff',  latencyMs: 3   },
-    { nodeId: 'fw-01',     action: 'PERMIT',  detail: 'ACL INBOUND rule 42: PERMIT TCP any 443', latencyMs: 4  },
-    { nodeId: 'rtr-core',  action: 'ROUTE',   detail: 'BGP next-hop 10.0.4.1, Out Gi0/0',       latencyMs: 7   },
-    { nodeId: 'srv-web',   action: 'DELIVER', detail: 'SYN received, TCP handshake initiated',   latencyMs: 8   },
+    {
+      nodeId: 'pc-01',
+      action: 'ORIGIN',
+      label: 'Packet Born',
+      latencyMs: 0,
+      stages: [
+        { phase: 'DNS',     detail: 'Resolved web.internal → 10.0.4.10 (cached, TTL 298s)' },
+        { phase: 'ARP',     detail: 'Who has 10.0.0.1? → Gateway MAC aa:bb:cc:11:22:33 resolved' },
+        { phase: 'L3',      detail: 'IP header: SRC 10.0.0.10  DST 10.0.4.10  TTL 64  PROTO TCP' },
+        { phase: 'TCP',     detail: 'SYN flag set  SEQ=1842930  SRC port 54321 → DST 443' },
+        { phase: 'L2',      detail: 'Ethernet frame built, VLAN10 tag applied, enqueued on NIC' },
+      ]
+    },
+    {
+      nodeId: 'sw-access',
+      action: 'FORWARD',
+      label: 'Access Switch',
+      latencyMs: 1,
+      stages: [
+        { phase: 'RECV',    detail: 'Frame in on Gi0/24 (PC-01 access port)' },
+        { phase: 'CAM',     detail: 'MAC table hit: DST aa:bb:cc:11:22:33 → out Gi0/1 (uplink)' },
+        { phase: 'VLAN',    detail: 'VLAN10 membership verified, 802.1Q tag preserved' },
+        { phase: 'FWD',     detail: 'Frame forwarded out Gi0/1 → SW-DIST-01 uplink' },
+      ]
+    },
+    {
+      nodeId: 'sw-dist',
+      action: 'FORWARD',
+      label: 'Distribution Switch',
+      latencyMs: 3,
+      stages: [
+        { phase: 'RECV',    detail: 'Frame in on Te0/2 (access uplink)' },
+        { phase: 'L3',      detail: 'SVI VLAN10: DST 10.0.4.10 not local subnet — routing up' },
+        { phase: 'TTL',     detail: 'TTL 64 → 63 (decremented at L3 boundary)' },
+        { phase: 'FWD',     detail: 'Next-hop 10.0.2.1 (FW-EDGE-01) out Te0/1' },
+      ]
+    },
+    {
+      nodeId: 'fw-01',
+      action: 'PERMIT',
+      label: 'Firewall',
+      latencyMs: 4,
+      stages: [
+        { phase: 'RECV',    detail: 'Packet in on E1/1 (inside interface, zone TRUST)' },
+        { phase: 'ACL',     detail: 'Evaluating INBOUND policy — 147 rules checked' },
+        { phase: 'MATCH',   detail: 'Rule 42 HIT: PERMIT TCP 10.0.0.0/8 any dst-port 443' },
+        { phase: 'SESSION', detail: 'Stateful table: new session created, conn-id 0x4A2F' },
+        { phase: 'NAT',     detail: 'NAT policy: no match — source IP 10.0.0.10 unchanged' },
+        { phase: 'FWD',     detail: 'Exiting E1/2 (outside interface, zone UNTRUST) → RTR-CORE-01' },
+      ]
+    },
+    {
+      nodeId: 'rtr-core',
+      action: 'ROUTE',
+      label: 'Core Router',
+      latencyMs: 7,
+      stages: [
+        { phase: 'RECV',    detail: 'Packet in on Gi0/1' },
+        { phase: 'TTL',     detail: 'TTL 63 → 62' },
+        { phase: 'RIB',     detail: 'Longest match: 10.0.4.0/24 via BGP  AD 20  metric 0' },
+        { phase: 'CEF',     detail: 'CEF adjacency rewrite: new DST MAC dd:ee:ff:44:55:66' },
+        { phase: 'FWD',     detail: 'Exiting Gi0/0 → SRV-WEB-01 segment' },
+      ]
+    },
+    {
+      nodeId: 'srv-web',
+      action: 'DELIVER',
+      label: 'Destination Reached',
+      latencyMs: 8,
+      stages: [
+        { phase: 'RECV',    detail: 'Frame in on eth0, VLAN tag stripped by NIC' },
+        { phase: 'L3',      detail: 'IP DST 10.0.4.10 matches local interface — accepted by kernel' },
+        { phase: 'TCP',     detail: 'SYN received → SYN-ACK sent  SEQ=9938271  ACK=1842931' },
+        { phase: 'TLS',     detail: 'TLS 1.3 ClientHello expected — handshake queued on port 443' },
+        { phase: 'APP',     detail: 'Socket passed to nginx worker (pid 1847) — connection live' },
+      ]
+    },
   ]
 }
