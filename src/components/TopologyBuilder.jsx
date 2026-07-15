@@ -20,6 +20,7 @@ export function TopologyBuilder({ open, onClose }) {
   const [linkDst, setLinkDst] = useState('')
   const [linkMedium, setLinkMedium] = useState('copper')
   const [importError, setImportError] = useState(null)
+  const [labelError, setLabelError] = useState(false)
 
   if (!open) return null
 
@@ -27,7 +28,8 @@ export function TopologyBuilder({ open, onClose }) {
   const links = topology?.links || []
 
   const addNode = () => {
-    if (!newNode.label) return
+    if (!newNode.label) { setLabelError(true); return }
+    setLabelError(false)
     const id = `node-${++nodeCounter}`
     const col = nodes.length % 5
     const row = Math.floor(nodes.length / 5)
@@ -128,7 +130,13 @@ export function TopologyBuilder({ open, onClose }) {
             }}>{d.label}</button>
           ))}
         </div>
-        <Field label="LABEL *" value={newNode.label} onChange={v => setNewNode(n => ({ ...n, label: v }))} placeholder="SW-CORE-01" />
+        <Field
+          label="LABEL *"
+          value={newNode.label}
+          onChange={v => { setNewNode(n => ({ ...n, label: v })); setLabelError(false) }}
+          placeholder="SW-CORE-01"
+          error={labelError}
+        />
         <Field label="IP ADDRESS" value={newNode.ip} onChange={v => setNewNode(n => ({ ...n, ip: v }))} placeholder="192.168.1.1" />
         <Field label="MAC ADDRESS" value={newNode.mac} onChange={v => setNewNode(n => ({ ...n, mac: v }))} placeholder="aa:bb:cc:dd:ee:ff" />
         <button onClick={addNode} style={{ ...btnSm('#00ff88', true), width: '100%', marginTop: 8 }}>+ Add Device</button>
@@ -183,12 +191,24 @@ export function TopologyBuilder({ open, onClose }) {
   )
 }
 
-function Field({ label, value, onChange, placeholder }) {
+function Field({ label, value, onChange, placeholder, error }) {
   return (
     <div style={{ marginBottom: 6 }}>
-      <label style={{ display: 'block', fontSize: 9, color: '#557', letterSpacing: 1.5, marginBottom: 3, fontWeight: 700 }}>{label}</label>
-      <input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-        style={{ width: '100%', background: '#060f1e', border: '1px solid #0d2540', borderRadius: 5, padding: '6px 8px', color: '#c8dff0', fontSize: 11, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
+      <label style={{ display: 'block', fontSize: 9, color: error ? '#ff4455' : '#557', letterSpacing: 1.5, marginBottom: 3, fontWeight: 700 }}>
+        {label}{error && ' — required'}
+      </label>
+      <input
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder={placeholder}
+        style={{
+          width: '100%', background: '#060f1e',
+          border: `1px solid ${error ? '#ff4455' : '#0d2540'}`,
+          borderRadius: 5, padding: '6px 8px', color: '#c8dff0',
+          fontSize: 11, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box'
+        }}
+      />
+      {error && <div style={{ fontSize: 9, color: '#ff4455', marginTop: 3 }}>⚠ Enter a label before adding</div>}
     </div>
   )
 }

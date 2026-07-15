@@ -26,10 +26,14 @@ function saveTrace(trace, currentStep) {
     }))
   }
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
-  a.href = URL.createObjectURL(blob)
+  a.href = url
   a.download = `trace-${trace.src}-to-${trace.dst}-${ts.slice(0, 19).replace(/:/g, '-')}.json`
+  document.body.appendChild(a)
   a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
 }
 
 export function Toolbar({ onTopologyLoad }) {
