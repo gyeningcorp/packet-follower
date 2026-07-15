@@ -3,7 +3,7 @@ import { fetchTopology, runTrace } from '../api/index.js'
 
 export function Toolbar({ onTopologyLoad }) {
   const { mode, setMode, toggleAPIPanel, apiConnected, apiType,
-          tracing, resetTrace, startTrace, topology } = useStore()
+          tracing, trace, resetTrace, startTrace, topology } = useStore()
 
   const handleTrace = async () => {
     if (tracing) { resetTrace(); return }
@@ -63,6 +63,18 @@ export function Toolbar({ onTopologyLoad }) {
       }}>
         {tracing ? '■ STOP TRACE' : '▶ RUN TRACE'}
       </button>
+
+      {/* Reset button — only visible when a trace has been run */}
+      {trace && !tracing && (
+        <button onClick={resetTrace} style={{
+          background: '#ff990011', color: '#ff9900',
+          border: '1px solid #ff990033',
+          borderRadius: 8, padding: '6px 14px', cursor: 'pointer',
+          fontSize: 12, fontFamily: 'inherit', fontWeight: 700, letterSpacing: 1
+        }}>
+          ⟳ RESET
+        </button>
+      )}
 
       {/* Refresh topology */}
       <button onClick={handleRefreshTopology} style={{
