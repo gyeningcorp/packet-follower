@@ -32,4 +32,8 @@ export const useStore = create((set, get) => ({
   apiConnected: false,
   apiType: 'mock',
   setAPIConnected: (type) => set({ apiConnected: true, apiType: type, apiPanelOpen: false }),
+
+  // Topology builder
+  builderOpen: false,
+  toggleBuilder: () => set(s => ({ builderOpen: !s.builderOpen })),
 }))

@@ -3,7 +3,8 @@ import { fetchTopology, runTrace } from '../api/index.js'
 
 export function Toolbar({ onTopologyLoad }) {
   const { mode, setMode, toggleAPIPanel, apiConnected, apiType,
-          tracing, trace, resetTrace, startTrace, topology } = useStore()
+          tracing, trace, resetTrace, startTrace, topology,
+          builderOpen, toggleBuilder } = useStore()
 
   const handleTrace = async () => {
     if (tracing) { resetTrace(); return }
@@ -84,6 +85,17 @@ export function Toolbar({ onTopologyLoad }) {
         fontSize: 12, fontFamily: 'inherit'
       }}>
         ↺ Topology
+      </button>
+
+      {/* Builder toggle */}
+      <button onClick={toggleBuilder} style={{
+        background: builderOpen ? '#aa88ff22' : 'transparent',
+        color: builderOpen ? '#aa88ff' : '#446',
+        border: `1px solid ${builderOpen ? '#aa88ff44' : '#0d2540'}`,
+        borderRadius: 8, padding: '6px 14px', cursor: 'pointer',
+        fontSize: 12, fontFamily: 'inherit', fontWeight: 700
+      }}>
+        ⊞ BUILDER
       </button>
 
       <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
