@@ -1,10 +1,40 @@
 import { useStore } from '../store/index.js'
 import { fetchTopology, runTrace } from '../api/index.js'
 
+function saveTrace(trace, currentStep) {
+  const ts = new Date().toISOString()
+  const totalMs = trace.hops.reduce((sum, h) => sum + (h.latencyMs || 0), 0)
+  const completedHops = trace.hops.slice(0, currentStep + 1)
+  const payload = {
+    savedAt: ts,
+    src: trace.src,
+    dst: trace.dst,
+    protocol: trace.protocol || 'TCP',
+    dstPort: trace.dstPort,
+    status: currentStep >= trace.hops.length - 1 ? 'DELIVERED' : 'IN_PROGRESS',
+    totalLatencyMs: totalMs,
+    hopsRecorded: completedHops.length,
+    hopsTotal: trace.hops.length,
+    hops: completedHops.map((h, i) => ({
+      step: i + 1,
+      nodeId: h.nodeId,
+      label: h.label,
+      action: h.action,
+      latencyMs: h.latencyMs,
+      stages: h.stages || []
+    }))
+  }
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = `trace-${trace.src}-to-${trace.dst}-${ts.slice(0, 19).replace(/:/g, '-')}.json`
+  a.click()
+}
+
 export function Toolbar({ onTopologyLoad }) {
   const { mode, setMode, toggleAPIPanel, apiConnected, apiType,
-          tracing, trace, resetTrace, startTrace, topology,
-          builderOpen, toggleBuilder } = useStore()
+          tracing, trace, traceStep, resetTrace, startTrace, topology,
+          builderOpen, toggleBuilder, paused, togglePause } = useStore()
 
   const handleTrace = async () => {
     if (tracing) { resetTrace(); return }
@@ -64,6 +94,31 @@ export function Toolbar({ onTopologyLoad }) {
       }}>
         {tracing ? '■ STOP TRACE' : '▶ RUN TRACE'}
       </button>
+
+      {/* Pause / Resume — visible during active trace */}
+      {tracing && (
+        <button onClick={togglePause} style={{
+          background: paused ? '#00ff8822' : '#ffdd0011',
+          color: paused ? '#00ff88' : '#ffdd00',
+          border: `1px solid ${paused ? '#00ff8844' : '#ffdd0033'}`,
+          borderRadius: 8, padding: '6px 14px', cursor: 'pointer',
+          fontSize: 12, fontFamily: 'inherit', fontWeight: 700, letterSpacing: 1
+        }}>
+          {paused ? '▶ RESUME' : '⏸ PAUSE'}
+        </button>
+      )}
+
+      {/* Save journey — visible during or after a trace */}
+      {trace && (
+        <button onClick={() => saveTrace(trace, traceStep)} style={{
+          background: '#aa88ff11', color: '#aa88ff',
+          border: '1px solid #aa88ff33',
+          borderRadius: 8, padding: '6px 14px', cursor: 'pointer',
+          fontSize: 12, fontFamily: 'inherit', fontWeight: 700, letterSpacing: 1
+        }}>
+          💾 SAVE
+        </button>
+      )}
 
       {/* Reset button — only visible when a trace has been run */}
       {trace && !tracing && (

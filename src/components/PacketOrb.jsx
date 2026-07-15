@@ -16,7 +16,7 @@ const ACTION_COLORS = {
 export function PacketOrb({ topology, onHopComplete }) {
   const orbRef = useRef()
   const lightRef = useRef()
-  const { trace, traceStep, tracing, mode } = useStore()
+  const { trace, traceStep, tracing, mode, paused } = useStore()
 
   const currentHop = trace?.hops?.[traceStep]
   const currentNode = topology?.nodes?.find(n => n.id === currentHop?.nodeId)
@@ -37,6 +37,7 @@ export function PacketOrb({ topology, onHopComplete }) {
       }
     })
 
+
     if (orbRef.current.material) {
       gsap.to(orbRef.current.material, {
         emissiveIntensity: 2.5,
@@ -50,10 +51,13 @@ export function PacketOrb({ topology, onHopComplete }) {
 
   useFrame((state, delta) => {
     if (!orbRef.current) return
-    orbRef.current.rotation.y += delta * 3
-    orbRef.current.rotation.x += delta * 1.5
-    // Pulse
-    const pulse = Math.sin(state.clock.elapsedTime * 6) * 0.06
+    if (!paused) {
+      orbRef.current.rotation.y += delta * 3
+      orbRef.current.rotation.x += delta * 1.5
+    }
+    // Pulse — slower when paused
+    const speed = paused ? 2 : 6
+    const pulse = Math.sin(state.clock.elapsedTime * speed) * 0.06
     const base = tracing ? 0.22 : 0
     orbRef.current.scale.setScalar(base + pulse)
 

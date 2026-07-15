@@ -14,17 +14,35 @@ export const useStore = create((set, get) => ({
   traceStep: -1,   // current hop index (-1 = idle)
   tracing: false,
 
-  startTrace: (trace) => set({ trace, traceStep: 0, tracing: true }),
+  paused: false,
+  pendingAdvance: false,
+
+  startTrace: (trace) => set({ trace, traceStep: 0, tracing: true, paused: false, pendingAdvance: false }),
   advanceStep: () => {
-    const { trace, traceStep } = get()
+    const { trace, traceStep, paused } = get()
+    if (paused) { set({ pendingAdvance: true }); return }
     const next = traceStep + 1
     if (next >= trace.hops.length) {
-      set({ tracing: false, traceStep: trace.hops.length - 1 })
+      set({ tracing: false, traceStep: trace.hops.length - 1, pendingAdvance: false })
     } else {
-      set({ traceStep: next })
+      set({ traceStep: next, pendingAdvance: false })
     }
   },
-  resetTrace: () => set({ trace: null, traceStep: -1, tracing: false }),
+  togglePause: () => {
+    const { paused, pendingAdvance, trace, traceStep } = get()
+    if (paused && pendingAdvance) {
+      // Resume: fire the advance that was held
+      const next = traceStep + 1
+      if (next >= trace.hops.length) {
+        set({ paused: false, tracing: false, traceStep: trace.hops.length - 1, pendingAdvance: false })
+      } else {
+        set({ paused: false, traceStep: next, pendingAdvance: false })
+      }
+    } else {
+      set({ paused: !paused })
+    }
+  },
+  resetTrace: () => set({ trace: null, traceStep: -1, tracing: false, paused: false, pendingAdvance: false }),
 
   // API panel
   apiPanelOpen: false,

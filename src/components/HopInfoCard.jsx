@@ -18,8 +18,8 @@ const PHASE_COLORS = {
 }
 
 export function HopInfoCard({ topology }) {
-  const { trace, traceStep, tracing } = useStore()
-  if (!tracing || !trace || traceStep < 0) return null
+  const { trace, traceStep, tracing, paused } = useStore()
+  if ((!tracing && !paused) || !trace || traceStep < 0) return null
 
   const hop = trace.hops[traceStep]
   const node = topology?.nodes?.find(n => n.id === hop?.nodeId)
@@ -37,6 +37,13 @@ export function HopInfoCard({ topology }) {
       fontFamily: "'SF Mono', Consolas, monospace", color: '#e0f0ff',
       transition: 'all 0.35s ease', zIndex: 10
     }}>
+
+      {/* Paused banner */}
+      {paused && (
+        <div style={{ marginBottom: 10, padding: '4px 10px', background: '#ffdd0011', border: '1px solid #ffdd0033', borderRadius: 6, fontSize: 10, color: '#ffdd00', letterSpacing: 1.5, fontWeight: 700, textAlign: 'center' }}>
+          ⏸ PAUSED — press RESUME to continue
+        </div>
+      )}
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
