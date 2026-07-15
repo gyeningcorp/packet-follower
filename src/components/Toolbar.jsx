@@ -1,5 +1,6 @@
 import { useStore } from '../store/index.js'
 import { fetchTopology, runTrace } from '../api/index.js'
+import { mockDenyTrace } from '../data/mockTopology.js'
 
 function saveTrace(trace, currentStep) {
   const ts = new Date().toISOString()
@@ -129,6 +130,18 @@ export function Toolbar({ onTopologyLoad }) {
           fontSize: 12, fontFamily: 'inherit', fontWeight: 700, letterSpacing: 1
         }}>
           ⟳ RESET
+        </button>
+      )}
+
+      {/* Demo: DENY trace — shows OSI L3 issue detection */}
+      {!tracing && !apiConnected && (
+        <button onClick={() => { resetTrace(); setTimeout(() => startTrace(mockDenyTrace), 50) }} style={{
+          background: '#ff224411', color: '#ff4455',
+          border: '1px solid #ff224433',
+          borderRadius: 8, padding: '6px 14px', cursor: 'pointer',
+          fontSize: 11, fontFamily: 'inherit', fontWeight: 700
+        }}>
+          ⚠ DEMO DENY
         </button>
       )}
 

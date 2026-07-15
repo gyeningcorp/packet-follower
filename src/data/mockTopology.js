@@ -107,3 +107,40 @@ export const mockTraceResult = {
     },
   ]
 }
+
+// Alternate trace: firewall DENY — demonstrates L3 issue detection on the OSI panel
+export const mockDenyTrace = {
+  src: 'pc-01',
+  dst: 'srv-web',
+  protocol: 'TCP',
+  dstPort: 8443,
+  hops: [
+    {
+      nodeId: 'pc-01', action: 'ORIGIN', label: 'Packet Born', inMedium: null, latencyMs: 0,
+      stages: [
+        { phase: 'DNS', detail: 'Resolved internal.api → 10.0.4.10 (TTL 60s)' },
+        { phase: 'L3',  detail: 'IP header built: SRC 10.0.0.10 → DST 10.0.4.10  TTL 64' },
+        { phase: 'TCP', detail: 'SYN  SEQ=7712900  DST port 8443' },
+        { phase: 'L2',  detail: 'Frame enqueued on VLAN10 uplink' },
+      ]
+    },
+    {
+      nodeId: 'sw-access', action: 'FORWARD', label: 'Access Switch', inMedium: 'copper', latencyMs: 1,
+      stages: [
+        { phase: 'RECV', detail: 'Frame in on Gi0/24' },
+        { phase: 'CAM',  detail: 'MAC table hit → uplink Gi0/1' },
+        { phase: 'VLAN', detail: 'VLAN10 tag verified — trunk allowed' },
+        { phase: 'FWD',  detail: 'Forwarded to SW-DIST-01' },
+      ]
+    },
+    {
+      nodeId: 'fw-01', action: 'DENY', label: 'Firewall — BLOCKED', inMedium: 'fiber', latencyMs: 2,
+      stages: [
+        { phase: 'RECV',  detail: 'Packet in on E1/1 (zone TRUST)' },
+        { phase: 'ACL',   detail: 'Checking INBOUND policy — 147 rules evaluated' },
+        { phase: 'MATCH', detail: 'Rule 88 HIT: DENY TCP any any dst-port 8443 (non-standard port blocked)' },
+        { phase: 'L3',    detail: 'Packet dropped — ICMP unreachable sent back to 10.0.0.10' },
+      ]
+    },
+  ]
+}

@@ -4,6 +4,7 @@ import { Toolbar } from './components/Toolbar.jsx'
 import { HopInfoCard } from './components/HopInfoCard.jsx'
 import { APIConnectorPanel } from './components/APIConnectorPanel.jsx'
 import { TopologyBuilder } from './components/TopologyBuilder.jsx'
+import { OSIPanel } from './components/OSIPanel.jsx'
 import { useStore } from './store/index.js'
 import { fetchTopology } from './api/index.js'
 
@@ -18,6 +19,7 @@ export default function App() {
     <>
       <Toolbar onTopologyLoad={setTopology} />
       {topology && <NetworkScene topology={topology} />}
+      <OSIPanel />
       <HopInfoCard topology={topology} />
       <APIConnectorPanel />
       <TopologyBuilder open={builderOpen} onClose={toggleBuilder} />
