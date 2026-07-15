@@ -1,6 +1,5 @@
-import { useEffect, useRef } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { OrbitControls, Stars, Environment } from '@react-three/drei'
+import { OrbitControls } from '@react-three/drei'
 import { NetworkNode } from './NetworkNode.jsx'
 import { NetworkLink } from './NetworkLink.jsx'
 import { PacketOrb } from './PacketOrb.jsx'
@@ -29,14 +28,10 @@ function Scene({ topology }) {
 
   return (
     <>
-      <Stars radius={80} depth={50} count={3000} factor={3} fade speed={0.4} />
-      <ambientLight intensity={0.15} />
-      <pointLight position={[0, 8, 4]} intensity={0.6} color="#4488ff" />
-      <pointLight position={[0, -4, -4]} intensity={0.3} color="#003355" />
+      <ambientLight intensity={0.6} color="#ffffff" />
+      <directionalLight position={[5, 8, 5]} intensity={0.8} color="#e8f0ff" />
+      <directionalLight position={[-5, -4, -3]} intensity={0.2} color="#334466" />
 
-      <Environment preset="night" />
-
-      {/* Links */}
       {(topology?.links || []).map(link => {
         const src = nodeMap[link.source]
         const tgt = nodeMap[link.target]
@@ -45,7 +40,6 @@ function Scene({ topology }) {
         return <NetworkLink key={link.id} source={src} target={tgt} isActive={isActive} link={link} />
       })}
 
-      {/* Nodes */}
       {(topology?.nodes || []).map(node => (
         <NetworkNode
           key={node.id}
@@ -55,20 +49,13 @@ function Scene({ topology }) {
         />
       ))}
 
-      {/* Packet orb */}
       <PacketOrb topology={topology} onHopComplete={advanceStep} />
-
-      {/* Follow cam (only takes control in follow mode) */}
       <FollowCamera topology={topology} />
 
-      {/* Orbit controls — disabled in follow mode while tracing */}
       <OrbitControls
         enabled={mode === 'god' || !tracing}
-        enablePan={true}
-        enableZoom={true}
-        enableRotate={true}
-        minDistance={4}
-        maxDistance={30}
+        enablePan={true} enableZoom={true} enableRotate={true}
+        minDistance={4} maxDistance={30}
         makeDefault
       />
     </>
@@ -78,9 +65,8 @@ function Scene({ topology }) {
 export function NetworkScene({ topology }) {
   return (
     <Canvas
-      style={{ position: 'fixed', inset: 0, top: 52 }}
-      camera={{ position: [0, 4, 14], fov: 60 }}
-      shadows
+      style={{ position: 'fixed', inset: 0, top: 52, background: '#0d1117' }}
+      camera={{ position: [0, 4, 14], fov: 55 }}
       gl={{ antialias: true, alpha: false }}
     >
       <Scene topology={topology} />

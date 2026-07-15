@@ -9,6 +9,10 @@ export const useStore = create((set, get) => ({
   topology: null,
   setTopology: (topology) => set({ topology }),
 
+  // trace configuration (IP input)
+  traceConfig: { srcIp: '', dstIp: '', protocol: 'TCP', port: '443' },
+  setTraceConfig: (patch) => set(s => ({ traceConfig: { ...s.traceConfig, ...patch } })),
+
   // active trace
   trace: null,
   traceStep: -1,   // current hop index (-1 = idle)
