@@ -19,6 +19,7 @@ export function TopologyBuilder({ open, onClose }) {
   const [linkSrc, setLinkSrc] = useState('')
   const [linkDst, setLinkDst] = useState('')
   const [linkMedium, setLinkMedium] = useState('copper')
+  const [linkError, setLinkError] = useState(null)
   const [importError, setImportError] = useState(null)
   const [labelError, setLabelError] = useState(false)
 
@@ -56,9 +57,11 @@ export function TopologyBuilder({ open, onClose }) {
   }
 
   const addLink = () => {
-    if (!linkSrc || !linkDst || linkSrc === linkDst) return
+    if (!linkSrc || !linkDst) { setLinkError('Select both a source and destination device.'); return }
+    if (linkSrc === linkDst) { setLinkError('Source and destination must be different devices.'); return }
     const id = `link-${linkSrc}-${linkDst}`
-    if (links.find(l => l.id === id)) return
+    if (links.find(l => l.id === id)) { setLinkError('A link between these devices already exists.'); return }
+    setLinkError(null)
     setTopology({ ...topology, links: [...links, { id, source: linkSrc, target: linkDst, bandwidth: '1G', latency: 1, medium: linkMedium }] })
     setLinkSrc(''); setLinkDst(''); setLinkMedium('copper')
   }
@@ -145,11 +148,24 @@ export function TopologyBuilder({ open, onClose }) {
       {/* Add Link */}
       <section style={section}>
         <div style={sectionTitle}>ADD LINK</div>
-        <select value={linkSrc} onChange={e => setLinkSrc(e.target.value)} style={selectStyle}>
+        {nodes.length < 2 && (
+          <div style={{ fontSize: 10, color: '#446', marginBottom: 8 }}>
+            ⚠ Add at least 2 devices first.
+          </div>
+        )}
+        <select
+          value={linkSrc}
+          onChange={e => { setLinkSrc(e.target.value); setLinkError(null) }}
+          style={{ ...selectStyle, border: `1px solid ${linkError && !linkSrc ? '#ff4455' : '#0d2540'}` }}
+        >
           <option value="">Source device...</option>
           {nodes.map(n => <option key={n.id} value={n.id}>{n.label}</option>)}
         </select>
-        <select value={linkDst} onChange={e => setLinkDst(e.target.value)} style={{ ...selectStyle, marginTop: 6 }}>
+        <select
+          value={linkDst}
+          onChange={e => { setLinkDst(e.target.value); setLinkError(null) }}
+          style={{ ...selectStyle, marginTop: 6, border: `1px solid ${linkError && !linkDst ? '#ff4455' : '#0d2540'}` }}
+        >
           <option value="">Destination device...</option>
           {nodes.map(n => <option key={n.id} value={n.id}>{n.label}</option>)}
         </select>
@@ -169,6 +185,7 @@ export function TopologyBuilder({ open, onClose }) {
           ))}
         </div>
         <button onClick={addLink} style={{ ...btnSm('#ff9900', true), width: '100%', marginTop: 8 }}>+ Add Link</button>
+        {linkError && <div style={{ fontSize: 9, color: '#ff4455', marginTop: 5 }}>⚠ {linkError}</div>}
       </section>
 
       {/* Device list */}
