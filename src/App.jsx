@@ -9,11 +9,25 @@ import { useStore } from './store/index.js'
 import { fetchTopology } from './api/index.js'
 
 export default function App() {
-  const { topology, setTopology, builderOpen, toggleBuilder } = useStore()
+  const { topology, setTopology, builderOpen, toggleBuilder, replaying, tracing, stepForward } = useStore()
 
   useEffect(() => {
     fetchTopology().then(setTopology)
   }, [])
+
+  // Auto-replay: advance one hop at a time when replaying is active
+  useEffect(() => {
+    if (!replaying || tracing) return
+    const interval = setInterval(() => {
+      const { trace, traceStep } = useStore.getState()
+      if (!trace || traceStep >= trace.hops.length - 1) {
+        useStore.setState({ replaying: false })
+      } else {
+        useStore.getState().stepForward()
+      }
+    }, 1400)
+    return () => clearInterval(interval)
+  }, [replaying, tracing])
 
   return (
     <>

@@ -10,7 +10,7 @@ import {
 } from '../data/osiModel.js'
 
 export function OSIPanel() {
-  const { trace, traceStep, tracing, paused, builderOpen } = useStore()
+  const { trace, traceStep, tracing, replaying, builderOpen } = useStore()
   const [expandedLayer, setExpandedLayer] = useState(null)
 
   const visible = !builderOpen && trace && traceStep >= 0
@@ -37,11 +37,11 @@ export function OSIPanel() {
     ? `⚠ ISSUE — ${ISSUE_LABELS[issueLayerNum] || 'Unknown layer'}`
     : tracing
     ? '● LIVE TRACE'
-    : paused
-    ? '⏸ PAUSED'
-    : '✓ COMPLETE'
+    : replaying
+    ? '▶ REPLAYING'
+    : '✓ COMPLETE — REVIEW MODE'
 
-  const statusColor = hasIssue ? '#ff4455' : tracing ? '#00ff88' : paused ? '#ffdd00' : '#00aaff'
+  const statusColor = hasIssue ? '#ff4455' : tracing ? '#00ff88' : replaying ? '#ffdd00' : '#00aaff'
 
   return (
     <div style={{

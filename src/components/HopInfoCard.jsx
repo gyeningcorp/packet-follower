@@ -24,8 +24,8 @@ const PHASE_COLORS = {
 }
 
 export function HopInfoCard({ topology }) {
-  const { trace, traceStep, tracing, paused } = useStore()
-  if ((!tracing && !paused) || !trace || traceStep < 0) return null
+  const { trace, traceStep, tracing, replaying } = useStore()
+  if (!trace || traceStep < 0) return null
 
   const hop = trace.hops[traceStep]
   const node = topology?.nodes?.find(n => n.id === hop?.nodeId)
@@ -34,6 +34,7 @@ export function HopInfoCard({ topology }) {
   const isFirst = traceStep === 0
   const isLast = traceStep === trace.hops.length - 1
   const medium = hop?.inMedium ? MEDIUM_META[hop.inMedium] : null
+  const inReview = !tracing && trace
 
   return (
     <div style={{
@@ -45,10 +46,10 @@ export function HopInfoCard({ topology }) {
       transition: 'all 0.35s ease', zIndex: 10
     }}>
 
-      {/* Paused banner */}
-      {paused && (
-        <div style={{ marginBottom: 10, padding: '4px 10px', background: '#ffdd0011', border: '1px solid #ffdd0033', borderRadius: 6, fontSize: 10, color: '#ffdd00', letterSpacing: 1.5, fontWeight: 700, textAlign: 'center' }}>
-          ⏸ PAUSED — press RESUME to continue
+      {/* Review mode indicator */}
+      {inReview && (
+        <div style={{ marginBottom: 10, padding: '4px 10px', background: '#00aaff0a', border: '1px solid #00aaff22', borderRadius: 6, fontSize: 10, color: '#00aaff', letterSpacing: 1.5, fontWeight: 700, textAlign: 'center' }}>
+          {replaying ? '▶ REPLAYING' : '⏸ REVIEW — use ⏮ ▶ ⏭ to step through'}
         </div>
       )}
 

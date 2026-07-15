@@ -12,37 +12,40 @@ export const useStore = create((set, get) => ({
   // active trace
   trace: null,
   traceStep: -1,   // current hop index (-1 = idle)
-  tracing: false,
+  tracing: false,  // true = live first pass running
+  replaying: false, // true = auto-replay in review mode
 
-  paused: false,
-  pendingAdvance: false,
+  startTrace: (trace) => set({ trace, traceStep: 0, tracing: true, replaying: false }),
 
-  startTrace: (trace) => set({ trace, traceStep: 0, tracing: true, paused: false, pendingAdvance: false }),
+  // Called by PacketOrb when orb reaches a node during live trace
   advanceStep: () => {
-    const { trace, traceStep, paused } = get()
-    if (paused) { set({ pendingAdvance: true }); return }
+    const { trace, traceStep } = get()
+    if (!trace) return
     const next = traceStep + 1
     if (next >= trace.hops.length) {
-      set({ tracing: false, traceStep: trace.hops.length - 1, pendingAdvance: false })
+      set({ tracing: false, traceStep: trace.hops.length - 1 })
     } else {
-      set({ traceStep: next, pendingAdvance: false })
+      set({ traceStep: next })
     }
   },
-  togglePause: () => {
-    const { paused, pendingAdvance, trace, traceStep } = get()
-    if (paused && pendingAdvance) {
-      // Resume: fire the advance that was held
-      const next = traceStep + 1
-      if (next >= trace.hops.length) {
-        set({ paused: false, tracing: false, traceStep: trace.hops.length - 1, pendingAdvance: false })
-      } else {
-        set({ paused: false, traceStep: next, pendingAdvance: false })
-      }
+
+  // Review playback controls (only active after trace completes)
+  stepBack: () => {
+    const { traceStep, replaying } = get()
+    if (traceStep > 0) set({ traceStep: traceStep - 1, replaying: false })
+  },
+  stepForward: () => {
+    const { trace, traceStep } = get()
+    if (!trace) return
+    if (traceStep < trace.hops.length - 1) {
+      set({ traceStep: traceStep + 1 })
     } else {
-      set({ paused: !paused })
+      set({ replaying: false }) // stop auto-replay at end
     }
   },
-  resetTrace: () => set({ trace: null, traceStep: -1, tracing: false, paused: false, pendingAdvance: false }),
+  toggleReplay: () => set(s => ({ replaying: !s.replaying })),
+
+  resetTrace: () => set({ trace: null, traceStep: -1, tracing: false, replaying: false }),
 
   // API panel
   apiPanelOpen: false,

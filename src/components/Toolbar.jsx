@@ -36,10 +36,17 @@ function saveTrace(trace, currentStep) {
   URL.revokeObjectURL(url)
 }
 
+const playBtn = (color) => ({
+  background: 'transparent', color, border: 'none',
+  borderRadius: 6, padding: '4px 8px', cursor: 'pointer',
+  fontSize: 14, fontFamily: 'inherit', lineHeight: 1
+})
+
 export function Toolbar({ onTopologyLoad }) {
   const { mode, setMode, toggleAPIPanel, apiConnected, apiType,
           tracing, trace, traceStep, resetTrace, startTrace, topology,
-          builderOpen, toggleBuilder, paused, togglePause } = useStore()
+          builderOpen, toggleBuilder,
+          replaying, toggleReplay, stepBack, stepForward } = useStore()
 
   const handleTrace = async () => {
     if (tracing) { resetTrace(); return }
@@ -100,41 +107,43 @@ export function Toolbar({ onTopologyLoad }) {
         {tracing ? '■ STOP TRACE' : '▶ RUN TRACE'}
       </button>
 
-      {/* Pause / Resume — visible during active trace */}
-      {tracing && (
-        <button onClick={togglePause} style={{
-          background: paused ? '#00ff8822' : '#ffdd0011',
-          color: paused ? '#00ff88' : '#ffdd00',
-          border: `1px solid ${paused ? '#00ff8844' : '#ffdd0033'}`,
-          borderRadius: 8, padding: '6px 14px', cursor: 'pointer',
-          fontSize: 12, fontFamily: 'inherit', fontWeight: 700, letterSpacing: 1
-        }}>
-          {paused ? '▶ RESUME' : '⏸ PAUSE'}
-        </button>
-      )}
-
-      {/* Save journey — visible during or after a trace */}
-      {trace && (
-        <button onClick={() => saveTrace(trace, traceStep)} style={{
-          background: '#aa88ff11', color: '#aa88ff',
-          border: '1px solid #aa88ff33',
-          borderRadius: 8, padding: '6px 14px', cursor: 'pointer',
-          fontSize: 12, fontFamily: 'inherit', fontWeight: 700, letterSpacing: 1
-        }}>
-          💾 SAVE
-        </button>
-      )}
-
-      {/* Reset button — only visible when a trace has been run */}
+      {/* Review playback controls — only appear after trace completes */}
       {trace && !tracing && (
-        <button onClick={resetTrace} style={{
-          background: '#ff990011', color: '#ff9900',
-          border: '1px solid #ff990033',
-          borderRadius: 8, padding: '6px 14px', cursor: 'pointer',
-          fontSize: 12, fontFamily: 'inherit', fontWeight: 700, letterSpacing: 1
-        }}>
-          ⟳ RESET
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#060f1e', border: '1px solid #0d2540', borderRadius: 10, padding: '3px 8px' }}>
+          {/* Step back */}
+          <button
+            onClick={stepBack}
+            disabled={traceStep <= 0}
+            title="Previous hop"
+            style={{ ...playBtn('#00aaff'), opacity: traceStep <= 0 ? 0.25 : 1 }}
+          >⏮</button>
+
+          {/* Auto-replay / pause */}
+          <button
+            onClick={toggleReplay}
+            title={replaying ? 'Pause replay' : 'Auto-replay'}
+            style={playBtn(replaying ? '#ffdd00' : '#00ff88')}
+          >{replaying ? '⏸' : '▶'}</button>
+
+          {/* Step forward */}
+          <button
+            onClick={stepForward}
+            disabled={traceStep >= trace.hops.length - 1}
+            title="Next hop"
+            style={{ ...playBtn('#00aaff'), opacity: traceStep >= trace.hops.length - 1 ? 0.25 : 1 }}
+          >⏭</button>
+
+          {/* Hop counter */}
+          <span style={{ fontSize: 10, color: '#334', minWidth: 36, textAlign: 'center' }}>
+            {traceStep + 1}/{trace.hops.length}
+          </span>
+
+          {/* Save */}
+          <button onClick={() => saveTrace(trace, traceStep)} title="Save journey" style={playBtn('#aa88ff')}>💾</button>
+
+          {/* Reset */}
+          <button onClick={resetTrace} title="Clear trace" style={playBtn('#ff9900')}>⟳</button>
+        </div>
       )}
 
       {/* Demo: DENY trace — shows OSI L3 issue detection */}
