@@ -18,6 +18,7 @@ export function TopologyBuilder({ open, onClose }) {
   const [newNode, setNewNode] = useState({ type: 'switch', label: '', ip: '', mac: '' })
   const [linkSrc, setLinkSrc] = useState('')
   const [linkDst, setLinkDst] = useState('')
+  const [linkMedium, setLinkMedium] = useState('copper')
   const [importError, setImportError] = useState(null)
 
   if (!open) return null
@@ -56,8 +57,8 @@ export function TopologyBuilder({ open, onClose }) {
     if (!linkSrc || !linkDst || linkSrc === linkDst) return
     const id = `link-${linkSrc}-${linkDst}`
     if (links.find(l => l.id === id)) return
-    setTopology({ ...topology, links: [...links, { id, source: linkSrc, target: linkDst, bandwidth: '1G', latency: 1 }] })
-    setLinkSrc(''); setLinkDst('')
+    setTopology({ ...topology, links: [...links, { id, source: linkSrc, target: linkDst, bandwidth: '1G', latency: 1, medium: linkMedium }] })
+    setLinkSrc(''); setLinkDst(''); setLinkMedium('copper')
   }
 
   const handleImport = (e) => {
@@ -144,6 +145,21 @@ export function TopologyBuilder({ open, onClose }) {
           <option value="">Destination device...</option>
           {nodes.map(n => <option key={n.id} value={n.id}>{n.label}</option>)}
         </select>
+        <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+          {[
+            { val: 'copper',   label: '◉ Copper',   color: '#ffaa44' },
+            { val: 'fiber',    label: '◈ Fiber',    color: '#00eeff' },
+            { val: 'wireless', label: '◎ Wireless', color: '#cc99ff' },
+          ].map(m => (
+            <button key={m.val} onClick={() => setLinkMedium(m.val)} style={{
+              flex: 1, background: linkMedium === m.val ? m.color + '22' : 'transparent',
+              color: linkMedium === m.val ? m.color : '#446',
+              border: `1px solid ${linkMedium === m.val ? m.color + '55' : '#0d2540'}`,
+              borderRadius: 6, padding: '4px 0', cursor: 'pointer',
+              fontSize: 10, fontFamily: 'inherit', fontWeight: 700
+            }}>{m.label}</button>
+          ))}
+        </div>
         <button onClick={addLink} style={{ ...btnSm('#ff9900', true), width: '100%', marginTop: 8 }}>+ Add Link</button>
       </section>
 

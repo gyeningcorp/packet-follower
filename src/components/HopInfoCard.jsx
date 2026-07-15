@@ -1,5 +1,11 @@
 import { useStore } from '../store/index.js'
 
+const MEDIUM_META = {
+  fiber:    { color: '#00eeff', icon: '◈', label: 'FIBER'    },
+  copper:   { color: '#ffaa44', icon: '◉', label: 'COPPER'   },
+  wireless: { color: '#cc99ff', icon: '◎', label: 'WIRELESS' },
+}
+
 const ACTION_BADGE = {
   ORIGIN:  { color: '#00aaff', label: 'PACKET BORN',     icon: '◎' },
   FORWARD: { color: '#00cc88', label: 'FORWARD',          icon: '→' },
@@ -27,6 +33,7 @@ export function HopInfoCard({ topology }) {
   const stages = hop?.stages || []
   const isFirst = traceStep === 0
   const isLast = traceStep === trace.hops.length - 1
+  const medium = hop?.inMedium ? MEDIUM_META[hop.inMedium] : null
 
   return (
     <div style={{
@@ -42,6 +49,15 @@ export function HopInfoCard({ topology }) {
       {paused && (
         <div style={{ marginBottom: 10, padding: '4px 10px', background: '#ffdd0011', border: '1px solid #ffdd0033', borderRadius: 6, fontSize: 10, color: '#ffdd00', letterSpacing: 1.5, fontWeight: 700, textAlign: 'center' }}>
           ⏸ PAUSED — press RESUME to continue
+        </div>
+      )}
+
+      {/* Medium transit indicator */}
+      {medium && (
+        <div style={{ marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8, padding: '5px 10px', background: medium.color + '0f', border: `1px solid ${medium.color}33`, borderRadius: 6 }}>
+          <span style={{ fontSize: 13, color: medium.color }}>{medium.icon}</span>
+          <span style={{ fontSize: 10, fontWeight: 700, color: medium.color, letterSpacing: 1.5 }}>{medium.label}</span>
+          <span style={{ fontSize: 10, color: '#446' }}>— packet traveled via {hop.inMedium} to reach this hop</span>
         </div>
       )}
 

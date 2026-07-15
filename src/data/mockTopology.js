@@ -8,11 +8,11 @@ export const mockTopology = {
     { id: 'srv-web',   label: 'SRV-WEB-01',     ip: '10.0.4.10',   type: 'endpoint', position: [7, 0, 0]  },
   ],
   links: [
-    { id: 'l1', source: 'pc-01',     target: 'sw-access', bandwidth: '1G',  latency: 1  },
-    { id: 'l2', source: 'sw-access', target: 'sw-dist',   bandwidth: '10G', latency: 2  },
-    { id: 'l3', source: 'sw-dist',   target: 'fw-01',     bandwidth: '10G', latency: 1  },
-    { id: 'l4', source: 'fw-01',     target: 'rtr-core',  bandwidth: '10G', latency: 3  },
-    { id: 'l5', source: 'rtr-core',  target: 'srv-web',   bandwidth: '10G', latency: 1  },
+    { id: 'l1', source: 'pc-01',     target: 'sw-access', bandwidth: '1G',  latency: 1, medium: 'copper' },
+    { id: 'l2', source: 'sw-access', target: 'sw-dist',   bandwidth: '10G', latency: 2, medium: 'fiber'  },
+    { id: 'l3', source: 'sw-dist',   target: 'fw-01',     bandwidth: '10G', latency: 1, medium: 'fiber'  },
+    { id: 'l4', source: 'fw-01',     target: 'rtr-core',  bandwidth: '10G', latency: 3, medium: 'fiber'  },
+    { id: 'l5', source: 'rtr-core',  target: 'srv-web',   bandwidth: '10G', latency: 1, medium: 'copper' },
   ]
 }
 
@@ -26,6 +26,7 @@ export const mockTraceResult = {
       nodeId: 'pc-01',
       action: 'ORIGIN',
       label: 'Packet Born',
+      inMedium: null,
       latencyMs: 0,
       stages: [
         { phase: 'DNS',     detail: 'Resolved web.internal → 10.0.4.10 (cached, TTL 298s)' },
@@ -39,6 +40,7 @@ export const mockTraceResult = {
       nodeId: 'sw-access',
       action: 'FORWARD',
       label: 'Access Switch',
+      inMedium: 'copper',
       latencyMs: 1,
       stages: [
         { phase: 'RECV',    detail: 'Frame in on Gi0/24 (PC-01 access port)' },
@@ -51,6 +53,7 @@ export const mockTraceResult = {
       nodeId: 'sw-dist',
       action: 'FORWARD',
       label: 'Distribution Switch',
+      inMedium: 'fiber',
       latencyMs: 3,
       stages: [
         { phase: 'RECV',    detail: 'Frame in on Te0/2 (access uplink)' },
@@ -63,6 +66,7 @@ export const mockTraceResult = {
       nodeId: 'fw-01',
       action: 'PERMIT',
       label: 'Firewall',
+      inMedium: 'fiber',
       latencyMs: 4,
       stages: [
         { phase: 'RECV',    detail: 'Packet in on E1/1 (inside interface, zone TRUST)' },
@@ -77,6 +81,7 @@ export const mockTraceResult = {
       nodeId: 'rtr-core',
       action: 'ROUTE',
       label: 'Core Router',
+      inMedium: 'fiber',
       latencyMs: 7,
       stages: [
         { phase: 'RECV',    detail: 'Packet in on Gi0/1' },
@@ -90,6 +95,7 @@ export const mockTraceResult = {
       nodeId: 'srv-web',
       action: 'DELIVER',
       label: 'Destination Reached',
+      inMedium: 'copper',
       latencyMs: 8,
       stages: [
         { phase: 'RECV',    detail: 'Frame in on eth0, VLAN tag stripped by NIC' },

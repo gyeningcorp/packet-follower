@@ -42,7 +42,7 @@ function Scene({ topology }) {
         const tgt = nodeMap[link.target]
         if (!src || !tgt) return null
         const isActive = activeLinks.has(`${link.source}-${link.target}`)
-        return <NetworkLink key={link.id} source={src} target={tgt} isActive={isActive} />
+        return <NetworkLink key={link.id} source={src} target={tgt} isActive={isActive} link={link} />
       })}
 
       {/* Nodes */}
